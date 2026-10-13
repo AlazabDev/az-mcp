@@ -58,7 +58,7 @@ export const multiAgentChat = async (req: Request, res: Response): Promise<void>
   }
   const parsedAgents: AgentInput[] = agents.map((item: Record<string, unknown>) => ({
     id: textValue(item?.id, 60), name: textValue(item?.name, 80),
-    provider: item?.provider, model: textValue(item?.model, 100),
+    provider: item?.provider === 'azure' ? 'azure' : 'openai', model: textValue(item?.model, 100),
     instruction: textValue(item?.instruction, 3000),
   }));
   const messages: ChatMessage[] = history.map((item: Record<string, unknown>) => ({
