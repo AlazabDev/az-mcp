@@ -49,7 +49,7 @@ const AlazabServicePage: React.FC = () => {
       const updated = serviceGroup
         ? await updateGroupServers(serviceGroup.id, [...managedNames, name])
         : await createGroup(groupName, `Alazab service: ${serviceId}`, [name]);
-      if (!updated || (!serviceGroup && !updated.success)) {
+      if (!updated || (!serviceGroup && 'success' in updated && !updated.success)) {
         setMappingError('Could not save service association. Check group permissions.');
       }
       refreshGroups();
