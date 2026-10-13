@@ -41,3 +41,26 @@ proxy location into the existing Nginx HTTPS vhost carefully, preserving
 - OAuth discovery, consent, group endpoint tools/list and an actual read-only
   Daftra tool call succeed from the target client.
 - These criteria have NOT yet been run against the production server.
+
+## Multi-agent chat configuration
+
+The authenticated dashboard includes `/chat` and `/chat/settings`.
+The chat uses the server-side `POST /api/alazab-chat/respond` endpoint
+to run up to six independent agents concurrently and return individual results.
+It is not an autonomous agent-orchestration engine and does not yet execute
+MCP tools inside model conversations.
+
+Set provider credentials only on the server environment (not in the browser):
+
+- `AZ_CHAT_OPENAI_API_KEY`: OpenAI API key
+- `AZ_CHAT_AZURE_API_KEY`: Azure AI endpoint key
+- `AZ_CHAT_AZURE_ENDPOINT`: complete HTTPS Azure chat-completions endpoint,
+  including any required API version.
+
+The OpenAI adapter uses `/v1/chat/completions` and requires a compatible
+model. The Azure adapter expects an endpoint accepting OpenAI-style chat
+completions; Azure Foundry Responses/Agents APIs require another adapter.
+
+Provider credentials are not returned to the frontend. Agent preferences
+are presently saved in the user's browser; chat history lives in component
+memory and is lost on reload. Verify real model responses after deployment.
