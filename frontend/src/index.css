@@ -15,14 +15,14 @@
   --hub-bg-2: oklch(0.975 0.002 250);
   --hub-surface: #ffffff;
   --hub-surface-hover: oklch(0.97 0.003 250);
-  --hub-switch-track-on: oklch(0.3 0.004 250);
+  --hub-switch-track-on: #030957;
   --hub-ink: oklch(0.18 0.01 250);
   --hub-ink-2: oklch(0.42 0.01 250);
   --hub-ink-3: oklch(0.6 0.01 250);
   --hub-line: oklch(0.92 0.004 250);
   --hub-line-2: oklch(0.96 0.003 250);
-  --hub-accent: oklch(0.55 0.15 250);
-  --hub-accent-soft: oklch(0.95 0.04 250);
+  --hub-accent: #030957;
+  --hub-accent-soft: #fff5d6;
   --hub-ok: oklch(0.66 0.15 145);
   --hub-warn: oklch(0.78 0.13 80);
   --hub-err: oklch(0.62 0.18 25);
@@ -41,7 +41,7 @@
   --hub-ink-3: oklch(0.55 0.005 250);
   --hub-line: oklch(0.3 0.005 250);
   --hub-line-2: oklch(0.26 0.005 250);
-  --hub-accent-soft: oklch(0.32 0.06 250);
+  --hub-accent-soft: #383052;
 }
 
 /* Hairline border + crisp surfaces */
@@ -1390,3 +1390,11 @@ button.text-white.is-loading::after {
 @keyframes button-spinner {
   to { transform: rotate(360deg); }
 }
+
+/* Alazab identity and accessible keyboard navigation */
+:root { --alazab-navy: #030957; --alazab-yellow: #FFB900; }
+:focus-visible { outline: 2px solid var(--alazab-yellow); outline-offset: 2px; }
+.hub-btn.primary { background: var(--alazab-navy); border-color: var(--alazab-navy); color: #fff; }
+.hub-btn.primary:hover { background: #111b75; }
+.hub-topbar { border-bottom: 1px solid var(--hub-line); }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }
