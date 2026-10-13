@@ -1,0 +1,26 @@
+name: Alazab production checks
+on:
+  push:
+    branches:
+      - feat/alazab-service-navigation-chatgpt
+  pull_request:
+    paths:
+      - 'frontend/**'
+      - 'src/**'
+      - 'deploy/alazab/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/alazab-production-check.yml'
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: corepack enable && corepack prepare pnpm@10.12.4 --activate
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm frontend:typecheck
+      - run: pnpm build
+      - run: node scripts/verify-dist.js

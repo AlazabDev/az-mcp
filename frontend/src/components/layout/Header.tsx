@@ -6,6 +6,7 @@ import ThemeSwitch from '@/components/ui/ThemeSwitch';
 import LanguageSwitch from '@/components/ui/LanguageSwitch';
 import GitHubIcon from '@/components/icons/GitHubIcon';
 import { useEmbeddingSync } from '@/contexts/EmbeddingSyncContext';
+import { alazabServices } from '@/data/alazabServices';
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -18,8 +19,16 @@ const useCrumbs = (): string[] => {
 
   return useMemo(() => {
     const path = location.pathname;
-    const root = t('app.title');
+    const root = 'Alazab MCP Hub';
     if (path === '/') return [root, t('nav.dashboard')];
+    if (path.startsWith('/chat/settings')) return [root, 'Chat', 'Settings'];
+    if (path.startsWith('/chat')) return [root, 'Multi-Agent Chat'];
+    if (path.startsWith('/connections/chatgpt')) return [root, 'AI Connections'];
+    if (path.startsWith('/integrations/')) {
+      const id = path.split('/')[2];
+      const service = alazabServices.find((item) => item.id === id);
+      return [root, 'Services', service?.label ?? id];
+    }
     if (path.startsWith('/credentials')) return [root, t('credentials.title')];
     if (path.startsWith('/servers')) return [root, t('nav.servers')];
     if (path.startsWith('/groups')) return [root, t('nav.groups')];
@@ -103,7 +112,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
 
       <div className="ml-auto flex items-center gap-1 shrink-0">
         <a
-          href="https://github.com/samanhappy/mcphub"
+          href="https://github.com/AlazabDev/az-mcp"
           target="_blank"
           rel="noopener noreferrer"
           className="hub-icon-btn"
@@ -112,7 +121,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
           <GitHubIcon className="h-4 w-4" />
         </a>
         <a
-          href="https://docs.mcphub.app"
+          href="https://github.com/AlazabDev/az-mcp/blob/main/README.md"
           target="_blank"
           rel="noopener noreferrer"
           className="hub-icon-btn"

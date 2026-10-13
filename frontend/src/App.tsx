@@ -23,6 +23,8 @@ const LogsPage = lazy(() => import('./pages/LogsPage'));
 const ActivityPage = lazy(() => import('./pages/ActivityPage'));
 const PromptsPage = lazy(() => import('./pages/PromptsPage'));
 const ResourcesPage = lazy(() => import('./pages/ResourcesPage'));
+const AlazabChatPage = lazy(() => import('./pages/AlazabChatPage'));
+const AlazabChatSettingsPage = lazy(() => import('./pages/AlazabChatSettingsPage'));
 const AIConnectionsPage = lazy(() => import('./pages/AIConnectionsPage'));
 const AlazabServicePage = lazy(() => import('./pages/AlazabServicePage'));
 
@@ -76,6 +78,8 @@ function App() {
                       <Route path="/" element={<DashboardPage />} />
                       <Route path="/credentials" element={<CredentialsPage />} />
                       <Route path="/servers" element={<ServersPage />} />
+                      <Route path="/chat" element={<AlazabChatPage />} />
+                      <Route path="/chat/settings" element={<AlazabChatSettingsPage />} />
                       <Route path="/connections/chatgpt" element={<AIConnectionsPage />} />
                       <Route path="/integrations/:serviceId" element={<AlazabServicePage />} />
                       <Route path="/groups" element={<GroupsPage />} />
