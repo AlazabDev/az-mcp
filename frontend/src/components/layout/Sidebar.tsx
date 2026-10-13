@@ -15,6 +15,7 @@ import {
   KeyRound,
   FolderKanban,
   Bot,
+  MessagesSquare,
   Search,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -71,6 +72,8 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
       icon: <RouteIcon className="h-4 w-4" />,
       badge: groups.length || undefined,
     },
+    { path: '/chat', label: 'Multi-Agent Chat', icon: <MessagesSquare className="h-4 w-4" /> },
+    { path: '/chat/settings', label: 'Chat Settings', icon: <SettingsIcon className="h-4 w-4" /> },
     { path: '/prompts', label: t('nav.prompts'), icon: <MessageSquare className="h-4 w-4" /> },
     { path: '/connections/chatgpt', label: 'ChatGPT / AI', icon: <Bot className="h-4 w-4" /> },
     { path: '/resources', label: t('nav.resources'), icon: <FileText className="h-4 w-4" /> },
