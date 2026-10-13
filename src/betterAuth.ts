@@ -76,9 +76,10 @@ if (
           // that sign-in succeeds for such issuers.
           mapProfileToUser: (profile) => ({
             name:
-              profile.name ||
-              profile.nickname ||
-              profile.preferred_username ||
+              (typeof profile.name === 'string' && profile.name.trim()) ||
+              (typeof profile.nickname === 'string' && profile.nickname.trim()) ||
+              (typeof profile.preferred_username === 'string' &&
+                profile.preferred_username.trim()) ||
               (typeof profile.email === 'string' && profile.email.split('@')[0]) ||
               `oidc-${String(profile.id ?? profile.sub ?? '')}`,
           }),
