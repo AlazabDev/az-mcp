@@ -21,6 +21,8 @@ const useCrumbs = (): string[] => {
     const path = location.pathname;
     const root = 'Alazab MCP Hub';
     if (path === '/') return [root, t('nav.dashboard')];
+    if (path.startsWith('/chat/settings')) return [root, 'Chat', 'Settings'];
+    if (path.startsWith('/chat')) return [root, 'Multi-Agent Chat'];
     if (path.startsWith('/connections/chatgpt')) return [root, 'AI Connections'];
     if (path.startsWith('/integrations/')) {
       const id = path.split('/')[2];
