@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { FolderOpen, RefreshCw, Search, Server as ServerIcon } from 'lucide-react';
 import { alazabServices } from '@/data/alazabServices';
@@ -30,6 +30,26 @@ const AlazabServicePage: React.FC = () => {
   } = useServerData({ refreshOnMount: true });
 
   const [search, setSearch] = useState('');
+  const [managedNames, setManagedNames] = useState<string[]>([]);
+  useEffect(() => {
+    if (!serviceId) return;
+    try {
+      const stored = JSON.parse(localStorage.getItem(`alazab:services:${serviceId}`) || '[]');
+      setManagedNames(Array.isArray(stored) ? stored.filter((name): name is string => typeof name === 'string') : []);
+    } catch { setManagedNames([]); }
+  }, [serviceId]);
+  const assignServer = (name: string) => {
+    if (!serviceId || !name) return;
+    const next = [...new Set([...managedNames, name])];
+    localStorage.setItem(`alazab:services:${serviceId}`, JSON.stringify(next));
+    setManagedNames(next);
+  };
+  const unassignServer = (name: string) => {
+    if (!serviceId) return;
+    const next = managedNames.filter((value) => value !== name);
+    localStorage.setItem(`alazab:services:${serviceId}`, JSON.stringify(next));
+    setManagedNames(next);
+  };
   const [editingServer, setEditingServer] = useState<Server | null>(null);
   const [selectedName, setSelectedName] = useState<string | null>(null);
   const [loadingEdit, setLoadingEdit] = useState(false);
@@ -37,9 +57,9 @@ const AlazabServicePage: React.FC = () => {
 
   const matchingServers = useMemo(() => {
     if (!service) return [];
-    return allServers.filter((server) => matchesService(server, service.id))
+    return allServers.filter((server) => managedNames.includes(server.name) || matchesService(server, service.id))
       .filter((server) => server.name.toLowerCase().includes(search.trim().toLowerCase()));
-  }, [allServers, service, search]);
+  }, [allServers, service, search, managedNames]);
 
   const editServer = async (server: Server) => {
     if (loadingEdit) return;
@@ -65,6 +85,8 @@ const AlazabServicePage: React.FC = () => {
     </div>;
   }
 
+  // Explicit assignments are browser-local view preferences; canonical server
+  // configuration and its permissions remain managed by MCPHub.
   const connected = matchingServers.filter((server) => server.status === 'connected').length;
   const toolCount = matchingServers.reduce((sum, server) => sum + (server.tools?.length ?? 0), 0);
 
@@ -95,6 +117,7 @@ const AlazabServicePage: React.FC = () => {
       <div className="hub-card hub-card-pad flex flex-wrap items-center gap-3">
         <Search size={16} style={{ color: 'var(--hub-ink-3)' }} />
         <input aria-label="Search servers in this integration" className="hub-input max-w-sm" placeholder="Search registered MCP servers" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <select aria-label="Assign an existing MCP server to this service" className="hub-input max-w-xs" value="" onChange={(e) => assignServer(e.target.value)}><option value="">Attach registered server...</option>{allServers.filter((server) => !matchingServers.some((entry) => entry.name === server.name)).map((server) => <option key={server.name} value={server.name}>{server.name}</option>)}</select>
         <Link to="/groups" className="hub-btn">MCP groups</Link>
         <Link to="/connections/chatgpt" className="hub-btn">AI client connections</Link>
       </div>
@@ -105,12 +128,13 @@ const AlazabServicePage: React.FC = () => {
       {!isLoading && matchingServers.length === 0 && (
         <div className="hub-card hub-card-pad space-y-3">
           <div className="flex items-center gap-2 font-semibold"><ServerIcon size={18} /> No registered MCP server matched this service</div>
-          <p className="hub-sub">A directory at /mnt/mcp/{service.id} is not necessarily an active MCP connection. Add a server above to manage it here. A registered server name should contain the service ID as a distinct token.</p>
+          <p className="hub-sub">A directory at /mnt/mcp/{service.id} is not necessarily an active MCP connection. Add a server above to manage it here. Use the selector above to attach an already registered server, or register a new one.</p>
         </div>
       )}
 
       {matchingServers.map((server) => (
         <div key={server.name} className="space-y-1">
+          {managedNames.includes(server.name) && <button type="button" className="hub-btn sm" onClick={() => unassignServer(server.name)}>Detach from this page</button>}
           <ServerCard
             server={server}
             onEdit={() => { void editServer(server); }}
