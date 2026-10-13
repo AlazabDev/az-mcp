@@ -15,6 +15,7 @@ import {
   KeyRound,
   FolderKanban,
   Bot,
+  Search,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useServerContext } from '@/contexts/ServerContext';
@@ -43,6 +44,8 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
   const { allServers } = useServerContext();
   const { groups } = useGroupData();
   const [activityAvailable, setActivityAvailable] = useState(false);
+  const [serviceSearch, setServiceSearch] = useState('');
+  const [servicesExpanded, setServicesExpanded] = useState(true);
 
   const appVersion = import.meta.env.PACKAGE_VERSION as string;
 
@@ -74,7 +77,9 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
     { path: '/market', label: t('nav.market'), icon: <Store className="h-4 w-4" /> },
   ];
 
-  const integrationItems: MenuItem[] = alazabServices.map((service) => ({
+  const integrationItems: MenuItem[] = alazabServices.filter((service) =>
+    `${service.label} ${service.id}`.toLowerCase().includes(serviceSearch.trim().toLowerCase())
+  ).map((service) => ({
     path: `/integrations/${service.id}`,
     label: service.label,
     icon: <FolderKanban className="h-4 w-4" />,
@@ -108,6 +113,8 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
             : 'text-white/80 hover:bg-white/10 hover:text-white',
         ].join(' ')
       }
+      title={collapsed ? item.label : undefined}
+      aria-label={item.label}
     >
       {({ isActive }) => (
         <>
@@ -124,7 +131,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
             <>
               <span className="truncate">{item.label}</span>
               {item.badge != null && (
-                <span className="ml-auto hub-mono hub-num text-[11px] text-white/70">
+                <span className="ml-auto hub-mono hub-num text-[11px] text-current opacity-75">
                   {item.badge}
                 </span>
               )}
@@ -167,7 +174,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
               Alazab MCP Hub
             </span>
             {appVersion && (
-              <span className="hub-mono text-[10.5px] text-[var(--hub-ink-3)] flex-shrink-0">
+              <span className="hub-mono text-[10.5px] text-white/60 flex-shrink-0">
                 {appVersion === 'dev' ? appVersion : `v${appVersion}`}
               </span>
             )}
@@ -181,10 +188,14 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
           {workspaceItems.map(renderItem)}
         </nav>
 
-        {!collapsed && <div className="hub-sect px-3 pt-3 pb-1.5 text-white/70">Alazab Services · /mnt/mcp</div>}
-        <nav aria-label="Alazab integrations" className={'flex flex-col gap-px ' + (collapsed ? 'px-1.5 mt-1' : 'px-2')}>
-          {integrationItems.map(renderItem)}
-        </nav>
+        {!collapsed && <button type="button" aria-expanded={servicesExpanded} onClick={() => setServicesExpanded((value) => !value)} className="w-full text-left hub-sect px-3 pt-4 pb-2 text-white/80 hover:text-white">Alazab Services {servicesExpanded ? '▾' : '▸'}</button>}
+        {(collapsed || servicesExpanded) && <>
+          {!collapsed && <div className="mx-2 mb-2 flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-2 text-white/80"><Search size={14} /><input aria-label="Filter integrations" placeholder="Find integration..." value={serviceSearch} onChange={(event) => setServiceSearch(event.target.value)} className="w-full min-w-0 bg-transparent py-2 text-xs text-white placeholder:text-white/50 outline-none" /></div>}
+          <nav aria-label="Alazab integrations" className={'flex flex-col gap-px ' + (collapsed ? 'px-1.5 mt-1' : 'px-2')}>
+            {integrationItems.map(renderItem)}
+          </nav>
+          {!collapsed && integrationItems.length === 0 && <p className="px-4 py-2 text-xs text-white/70">No matching services</p>}
+        </>}
 
         {!collapsed && <div className="hub-sect px-3 pt-3 pb-1.5">{t('nav.system')}</div>}
         <nav className={'flex flex-col gap-px ' + (collapsed ? 'px-1.5 mt-1' : 'px-2')}>
