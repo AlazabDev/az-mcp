@@ -1,8 +1,9 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { FolderOpen, RefreshCw, Search, Server as ServerIcon } from 'lucide-react';
 import { alazabServices } from '@/data/alazabServices';
 import { useServerData } from '@/hooks/useServerData';
+import { useGroupData } from '@/hooks/useGroupData';
 import { Server } from '@/types';
 import ServerCard from '@/components/ServerCard';
 import AddServerForm from '@/components/AddServerForm';
@@ -30,25 +31,50 @@ const AlazabServicePage: React.FC = () => {
   } = useServerData({ refreshOnMount: true });
 
   const [search, setSearch] = useState('');
-  const [managedNames, setManagedNames] = useState<string[]>([]);
-  useEffect(() => {
-    if (!serviceId) return;
+  // Persist associations in MCPHub groups, not browser localStorage.
+  const { groups, createGroup, updateGroupServers, triggerRefresh: refreshGroups } = useGroupData();
+  const groupName = serviceId ? `alazab-${serviceId}` : '';
+  const serviceGroup = groups.find((group) => group.name === groupName);
+  const managedNames = (serviceGroup?.servers ?? []).map((entry) =>
+    typeof entry === 'string' ? entry : entry.name
+  );
+  const [mappingBusy, setMappingBusy] = useState(false);
+  const [mappingError, setMappingError] = useState<string | null>(null);
+
+  const assignServer = async (name: string) => {
+    if (!serviceId || !name || mappingBusy || managedNames.includes(name)) return;
+    setMappingBusy(true);
+    setMappingError(null);
     try {
-      const stored = JSON.parse(localStorage.getItem(`alazab:services:${serviceId}`) || '[]');
-      setManagedNames(Array.isArray(stored) ? stored.filter((name): name is string => typeof name === 'string') : []);
-    } catch { setManagedNames([]); }
-  }, [serviceId]);
-  const assignServer = (name: string) => {
-    if (!serviceId || !name) return;
-    const next = [...new Set([...managedNames, name])];
-    localStorage.setItem(`alazab:services:${serviceId}`, JSON.stringify(next));
-    setManagedNames(next);
+      const updated = serviceGroup
+        ? await updateGroupServers(serviceGroup.id, [...managedNames, name])
+        : await createGroup(groupName, `Alazab service: ${serviceId}`, [name]);
+      if (!updated || (!serviceGroup && !updated.success)) {
+        setMappingError('Could not save service association. Check group permissions.');
+      }
+      refreshGroups();
+    } catch (error) {
+      setMappingError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setMappingBusy(false);
+    }
   };
-  const unassignServer = (name: string) => {
-    if (!serviceId) return;
-    const next = managedNames.filter((value) => value !== name);
-    localStorage.setItem(`alazab:services:${serviceId}`, JSON.stringify(next));
-    setManagedNames(next);
+  const unassignServer = async (name: string) => {
+    if (!serviceGroup || mappingBusy) return;
+    setMappingBusy(true);
+    setMappingError(null);
+    try {
+      const updated = await updateGroupServers(
+        serviceGroup.id,
+        managedNames.filter((value) => value !== name),
+      );
+      if (!updated) setMappingError('Could not remove service association.');
+      refreshGroups();
+    } catch (error) {
+      setMappingError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setMappingBusy(false);
+    }
   };
   const [editingServer, setEditingServer] = useState<Server | null>(null);
   const [selectedName, setSelectedName] = useState<string | null>(null);
@@ -85,8 +111,7 @@ const AlazabServicePage: React.FC = () => {
     </div>;
   }
 
-  // Explicit assignments are browser-local view preferences; canonical server
-  // configuration and its permissions remain managed by MCPHub.
+  // Explicit assignments live in MCPHub's persisted groups.
   const connected = matchingServers.filter((server) => server.status === 'connected').length;
   const toolCount = matchingServers.reduce((sum, server) => sum + (server.tools?.length ?? 0), 0);
 
@@ -117,12 +142,12 @@ const AlazabServicePage: React.FC = () => {
       <div className="hub-card hub-card-pad flex flex-wrap items-center gap-3">
         <Search size={16} style={{ color: 'var(--hub-ink-3)' }} />
         <input aria-label="Search servers in this integration" className="hub-input max-w-sm" placeholder="Search registered MCP servers" value={search} onChange={(e) => setSearch(e.target.value)} />
-        <select aria-label="Assign an existing MCP server to this service" className="hub-input max-w-xs" value="" onChange={(e) => assignServer(e.target.value)}><option value="">Attach registered server...</option>{allServers.filter((server) => !matchingServers.some((entry) => entry.name === server.name)).map((server) => <option key={server.name} value={server.name}>{server.name}</option>)}</select>
+        <select aria-label="Assign an existing MCP server to this service" className="hub-input max-w-xs" value="" disabled={mappingBusy} onChange={(e) => { void assignServer(e.target.value); }}><option value="">Attach registered server...</option>{allServers.filter((server) => !matchingServers.some((entry) => entry.name === server.name)).map((server) => <option key={server.name} value={server.name}>{server.name}</option>)}</select>
         <Link to="/groups" className="hub-btn">MCP groups</Link>
         <Link to="/connections/chatgpt" className="hub-btn">AI client connections</Link>
       </div>
 
-      {(error || actionError) && <div role="alert" className="hub-card hub-card-pad text-red-600">{actionError || error}</div>}
+      {(error || actionError || mappingError) && <div role="alert" className="hub-card hub-card-pad text-red-600">{mappingError || actionError || error}</div>}
 
       {isLoading && <p className="hub-sub">Loading MCP connections...</p>}
       {!isLoading && matchingServers.length === 0 && (
@@ -134,7 +159,7 @@ const AlazabServicePage: React.FC = () => {
 
       {matchingServers.map((server) => (
         <div key={server.name} className="space-y-1">
-          {managedNames.includes(server.name) && <button type="button" className="hub-btn sm" onClick={() => unassignServer(server.name)}>Detach from this page</button>}
+          {managedNames.includes(server.name) && <button type="button" className="hub-btn sm" disabled={mappingBusy} onClick={() => { void unassignServer(server.name); }}>Detach from this page</button>}
           <ServerCard
             server={server}
             onEdit={() => { void editServer(server); }}
