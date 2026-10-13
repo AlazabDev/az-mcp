@@ -175,6 +175,7 @@ import {
   importConfigTemplate,
 } from '../controllers/templateController.js';
 import { auth } from '../middlewares/auth.js';
+import { getChatProviders, multiAgentChat } from '../controllers/alazabChatController.js';
 import { requireAdminMiddleware } from '../utils/requireAdmin.js';
 import {
   getBetterAuthRuntimeConfig,
@@ -266,6 +267,8 @@ export const initRoutes = async (app: express.Application): Promise<void> => {
   authenticatedRouter.get('/credentials', listMyCredentials);
   authenticatedRouter.put('/credentials/:name', updateMyCredential);
   authenticatedRouter.delete('/credentials/:name', updateMyCredential);
+  authenticatedRouter.get('/alazab-chat/providers', getChatProviders);
+  authenticatedRouter.post('/alazab-chat/respond', multiAgentChat);
   authenticatedRouter.get('/servers', getAllServers);
   authenticatedRouter.get('/servers/:name/share-candidates', getServerShareCandidates);
   authenticatedRouter.get('/servers/:name', getServerConfig);
