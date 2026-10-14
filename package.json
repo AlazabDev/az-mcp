@@ -37,7 +37,15 @@
     "frontend:preview": "cd frontend && vite preview",
     "dev": "concurrently \"pnpm backend:dev\" \"pnpm frontend:dev\"",
     "debug": "concurrently \"pnpm backend:debug\" \"pnpm frontend:dev\"",
-    "prepublishOnly": "npm run build && node scripts/verify-dist.js"
+    "prepublishOnly": "npm run build && node scripts/verify-dist.js",
+    "pm2:start": "node scripts/alazab-pm2.cjs start",
+    "pm2:restart": "node scripts/alazab-pm2.cjs restart",
+    "pm2:reload": "node scripts/alazab-pm2.cjs reload",
+    "pm2:stop": "node scripts/alazab-pm2.cjs stop",
+    "pm2:delete": "node scripts/alazab-pm2.cjs delete",
+    "pm2:status": "node scripts/alazab-pm2.cjs status",
+    "pm2:logs": "node scripts/alazab-pm2.cjs logs",
+    "pm2:describe": "node scripts/alazab-pm2.cjs describe"
   },
   "keywords": [
     "typescript",
