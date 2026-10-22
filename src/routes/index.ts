@@ -175,6 +175,7 @@ import {
   importConfigTemplate,
 } from '../controllers/templateController.js';
 import { auth } from '../middlewares/auth.js';
+import { getLocalMcpDirectories } from '../controllers/localMcpDirectoryController.js';
 import { getChatProviders, multiAgentChat } from '../controllers/alazabChatController.js';
 import { requireAdminMiddleware } from '../utils/requireAdmin.js';
 import {
@@ -264,6 +265,8 @@ export const initRoutes = async (app: express.Application): Promise<void> => {
   // instead of consuming the shared authenticated-route budget.
 
   // API routes protected by auth middleware in middlewares/index.ts and rate limited here
+  // Administrator-only, read-only discovery of /mnt/mcp sibling folders.
+  authenticatedRouter.get('/local-mcp/directories', requireAdminMiddleware, getLocalMcpDirectories);
   authenticatedRouter.get('/credentials', listMyCredentials);
   authenticatedRouter.put('/credentials/:name', updateMyCredential);
   authenticatedRouter.delete('/credentials/:name', updateMyCredential);
