@@ -3,7 +3,7 @@ import path from 'node:path';
 import type { Request, Response } from 'express';
 
 /** Read-only inventory of direct child directories; never execute discovered code. */
-const ROOT = process.env.ALazab_MCP_ROOT || process.env.AZ_MCP_DISCOVERY_ROOT || '/mnt/mcp';
+const ROOT = process.env.AZ_MCP_DISCOVERY_ROOT || '/mnt/mcp';
 const EXCLUDED = new Set(['az-mcp', '.git', 'node_modules', '.agents']);
 const MANIFESTS = ['package.json', 'pyproject.toml', 'requirements.txt', 'server.json', 'mcp.json', 'docker-compose.yml', 'compose.yaml', 'README.md'];
 
